@@ -3,7 +3,7 @@ Contributors: arnee
 Donate link: http://www.arnebrachhold.de/redir/sitemap-paypal
 Tags: imageshack, post, images
 Requires at least: 2.1
-Stable tag: 1.0.1b
+Stable tag: 1.1
 
 This plugin allows you to upload images from your WordPress post screen to ImageShack and to insert them with the thumbnail into your post with a few clicks.
 
@@ -27,6 +27,10 @@ Yes, since version 1.0.1b it is compatible with PHP4.
 = Does this plugin work with WordPress 2.0 =
 
 Maybe... I didn't test it, but the chances are high that it will work.
+
+= Does this plugin work with WordPress 2.5 =
+
+Yep, version 1.1 works fine with WP 2.5.
 
 == Screenshots ==
 
