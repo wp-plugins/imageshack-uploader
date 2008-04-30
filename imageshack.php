@@ -5,7 +5,7 @@
  Plugin Name: ImageShack Uploader 
  Plugin URI: http://www.arnebrachhold.de/projects/wordpress-plugins/imageshack-uploader
  Description: Allows you to upload images to ImageShack.com directly from your posting screen.
- Version: 1.01b
+ Version: 1.1
  Author: Arne Brachhold
  Author URI: http://www.arnebrachhold.de/
 
@@ -31,11 +31,11 @@ License and Copyright:
  require any modifications made to it to be clearly indicated to potential users and 
  supplied to me). What I don't want to see, though, is people grabbing a version of 
  WordPress and this plugin, packaging them together and selling them (as they could do, 
- with GPL software). Bottom line is that I am not making money with this, and I don’t 
+ with GPL software). Bottom line is that I am not making money with this, and I don't 
  see why somebody else should be able to without me having a say first.
 
- Once again, this type of licensing doesn’t make any difference for 99% of users 
- (it’s free for whatever you need it to do), and shouldn’t stand in the way of the 
+ Once again, this type of licensing doesn't make any difference for 99% of users 
+ (it's free for whatever you need it to do), and shouldn't stand in the way of the 
  remaining 1% with more specific needs. If you have doubt or questions, contact me.
  I'm very open to any discussion or criticism regarding this format of licensing.  
 
@@ -107,11 +107,31 @@ class ImageShackFile {
 
 class ImageShack {
 	
+	var $mode = "wp25";
+	
+	function ImageShack() {
+		
+		global $wp_version;
+		
+		if(version_compare($wp_version,"2.5",">=")) {
+			$this->mode = "wp25";
+		} else {
+			$this->mode = "wp21";	
+		}
+		if($this->mode == "wp25") {
+			add_filter("media_upload_tabs",array(&$GLOBALS["is_instance"],"HtmlAddTab"));
+			add_action('media_upload_imageshack',array(&$GLOBALS["is_instance"],"HtmlGetTab"));
+		} else {
+			add_filter("wp_upload_tabs",array(&$GLOBALS["is_instance"],"HtmlAddTab"));	
+		}
+		
+	}
+	
 	function Enable() {
 		if(!isset($GLOBALS["is_instance"])) {			
 			
 			$GLOBALS["is_instance"]=new ImageShack();
-			add_filter("wp_upload_tabs",array(&$GLOBALS["is_instance"],"HtmlAddTab"));	
+			
 		}
 	}	
 	
@@ -137,16 +157,38 @@ class ImageShack {
 	}
 	
 	function HtmlAddTab($tabs) {
-		// 0 => tab display name, 1 => required cap, 2 => function that produces tab content, 3 => total number objects OR array(total, objects per page), 4 => add_query_args		
-		$tabs["imageshack"]=array(__("ImageShack","imageshack"),"edit_posts",array($this,"HtmlGetTab"),0);
+		if($this->mode=="wp25") {
+			$tabs['imageshack'] = __("ImageShack","imageshack");
+		} else {
+			//0 => tab display name, 1 => required cap, 2 => function that produces tab content, 3 => total number objects OR array(total, objects per page), 4 => add_query_args		
+			$tabs["imageshack"]=array(__("ImageShack","imageshack"),"edit_posts",array($this,"HtmlPrintTab"),0);
+		}
 		
 		return $tabs;
 	}
 	
 	function HtmlGetTab() {
+		return wp_iframe( array(&$this,'HtmlPrintTab'),'image', $errors );
+	}
+	
+	function HtmlPrintTab($type = 'image', $errors = null, $id = null) {
+		if($this->mode=="wp25") {
+			media_admin_css();
+			media_upload_header();
+		
+			$post_id = intval($_REQUEST['post_id']);
+
+			$form_action_url = get_option('siteurl') . "/wp-admin/media-upload.php?type=$type&tab=imageshack&post_id=$post_id";
+		} else {
+			$form_action_url = get_option('siteurl') . "/wp-admin/upload.php?style=inline&amp;tab=imageshack";	
+		}
+	
 		?>
 		<script type="text/javascript">
 			function imageshack_insert(img,link) {
+			
+
+			
 				if(!img) return;
 				h = '';
 				if(link) {
@@ -156,6 +198,13 @@ class ImageShack {
 				if(link) {
 					h+='</a>';
 				}
+				<?php if($this->mode=="wp25"): ?>
+				
+				top.send_to_editor(h);
+				top.tb_remove();
+				return;
+				
+				<?php else: ?>
 				
 				var win = window.opener ? window.opener : window.dialogArguments;
 				if ( !win )
@@ -166,6 +215,7 @@ class ImageShack {
 					tinyMCE.execCommand('mceInsertContent', false, h);
 				} else
 					win.edInsertContent(win.edCanvas, h);
+				<?php endif; ?>
 			}
 		</script>
 		<div style="padding:10px;">
@@ -209,12 +259,16 @@ class ImageShack {
 				} else {
 					echo "<p>" . __("Hey, you need to choose a file to upload ;)","imageshack") . "</p>";		
 				}
-				echo '<p><a href="' .  get_option('siteurl') . "/wp-admin/upload.php?style=inline&amp;tab=imageshack" . '">' . __("Upload another file","imageshack") . '</a>';
+				echo '<p><a href="' .  $form_action_url . '">' . __("Upload another file","imageshack") . '</a>';
 			} else {
 			?>
 			
 				<img src="<?php echo $_SERVER["PHP_SELF"]; ?>?res={9TV0BAD8C-77FA-4842-956E-CKLF7635F2C7}" alt="ImageShack Logo" style="width:75px; height:65px; float:left;  margin:10px;"  />
-				<form enctype="multipart/form-data" xid="upload-file" method="post" action="<?php echo get_option('siteurl') . "/wp-admin/upload.php?style=inline&amp;tab=imageshack"; ?>">
+				
+				<form enctype="multipart/form-data" method="post" action="<?php echo $form_action_url; ?>" class="media-upload-form type-form validate" id="<?php echo $type; ?>-form">
+					<input type="hidden" name="post_id" id="post_id" value="<?php echo (int) $post_id; ?>" />
+					<?php wp_nonce_field('media-form'); ?>
+				
 					<p><?php echo __("Upload your image to ImageShack here. After you've uploaded the file, you can insert it directly into your post. Depending on the image size it may need some time, so please press the upload button only once.","imageshack"); ?></p>
 					<table><col /><col class="widefat" />
 						<tr>
