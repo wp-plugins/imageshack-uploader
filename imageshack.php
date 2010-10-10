@@ -1,11 +1,12 @@
 <?php
+
 /*
  Info for WordPress:
  ==============================================================================
- Plugin Name: ImageShack Uploader 
+ Plugin Name: ImageShack Uploader
  Plugin URI: http://www.arnebrachhold.de/projects/wordpress-plugins/imageshack-uploader
  Description: Allows you to upload images to ImageShack.com directly from your posting screen.
- Version: 1.1
+ Version: 1.2
  Author: Arne Brachhold
  Author URI: http://www.arnebrachhold.de/
 
@@ -14,34 +15,20 @@ License and Copyright:
  ==============================================================================
  Copyright 2007  ARNE BRACHHOLD  (email : himself [a|t] arnebrachhold [dot] de)
 
- THIS SOFTWARE IS NOT GPL! It is copyright and all rights reserved. I (Arne Brachhold)
- grant you the the following rights:
- 
- - You may FREELY distribute this software in an UNMODIFIED state.
- - You may NOT CHARGE for the software or any distribution costs, however, 
-   you may charge for technical support for the software, including but not 
-   limited to, installation, customisation, and upgrading.
- - I allow derivatives but any major additions and changes must be provided 
-   to me so that I can make those changes freely available to the community.
- - Anything else is subject to prior written permission by Arne Brachhold. 
-   If you contact me, there is a good chance we will say yes to any reasonable request.
-   
- What this mean in practice: This plugin is "free software", in that it is absolutely 
- free to download, free to use and even free to tinker with (although I typically would 
- require any modifications made to it to be clearly indicated to potential users and 
- supplied to me). What I don't want to see, though, is people grabbing a version of 
- WordPress and this plugin, packaging them together and selling them (as they could do, 
- with GPL software). Bottom line is that I am not making money with this, and I don't 
- see why somebody else should be able to without me having a say first.
+ ImageShack Uploader is distributed under the GNU General Public License, Version 2,
+ June 1991. Copyright (C) 1989, 1991 Free Software Foundation, Inc., 51 Franklin
+ St, Fifth Floor, Boston, MA 02110, USA
 
- Once again, this type of licensing doesn't make any difference for 99% of users 
- (it's free for whatever you need it to do), and shouldn't stand in the way of the 
- remaining 1% with more specific needs. If you have doubt or questions, contact me.
- I'm very open to any discussion or criticism regarding this format of licensing.  
-
- This software is provided "as is", without any guarantee of warranty of any kind, 
- nor could I ever be held liable for any damages it could do to your system.
-
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
@@ -65,7 +52,7 @@ class ImageShackFile {
 		
 		foreach ($matches as $val) {
 			$tagName = $val[2];
-			$value = $val[3];	
+			$value = $val[3];
 			
 			$tags[$tagName] = $value;
 		}
@@ -76,15 +63,15 @@ class ImageShackFile {
 			$img->imageLink = (string) $tags["image_link"];
 			
 			if(!empty($tags["thumb_link"])) {
-				$img->thumbLink = (string)  $tags["thumb_link"];	
+				$img->thumbLink = (string)  $tags["thumb_link"];
 			}
 			
 			if(!empty($tags["ad_link"])) {
-				$img->adLink = (string) $tags["ad_link"];	
+				$img->adLink = (string) $tags["ad_link"];
 			}
 			
 			if(!empty($tags["thumb_exists"])) {
-				$img->thumbExists = ($tags["thumb_exists"]=="yes"?true:false);	
+				$img->thumbExists = ($tags["thumb_exists"]=="yes"?true:false);
 			}
 			
 			if(!empty($tags["resolution"])) {
@@ -98,7 +85,7 @@ class ImageShackFile {
 			if(!empty($tags["filesize"])) {
 				$img->fileSize = intval($tags["filesize"]);
 			}
-			return $img;			
+			return $img;
 		}
 		return null;
 	}
@@ -116,26 +103,26 @@ class ImageShack {
 		if(version_compare($wp_version,"2.5",">=")) {
 			$this->mode = "wp25";
 		} else {
-			$this->mode = "wp21";	
+			$this->mode = "wp21";
 		}
 		if($this->mode == "wp25") {
 			add_filter("media_upload_tabs",array(&$GLOBALS["is_instance"],"HtmlAddTab"));
 			add_action('media_upload_imageshack',array(&$GLOBALS["is_instance"],"HtmlGetTab"));
 		} else {
-			add_filter("wp_upload_tabs",array(&$GLOBALS["is_instance"],"HtmlAddTab"));	
+			add_filter("wp_upload_tabs",array(&$GLOBALS["is_instance"],"HtmlAddTab"));
 		}
 		
 	}
 	
 	function Enable() {
-		if(!isset($GLOBALS["is_instance"])) {			
+		if(!isset($GLOBALS["is_instance"])) {
 			
 			$GLOBALS["is_instance"]=new ImageShack();
 			
 		}
-	}	
+	}
 	
-	function Upload($fileName) {	
+	function Upload($fileName) {
 		$result = null;
 
 		$ch = curl_init("http://www.imageshack.us/index.php");
@@ -160,7 +147,7 @@ class ImageShack {
 		if($this->mode=="wp25") {
 			$tabs['imageshack'] = __("ImageShack","imageshack");
 		} else {
-			//0 => tab display name, 1 => required cap, 2 => function that produces tab content, 3 => total number objects OR array(total, objects per page), 4 => add_query_args		
+			//0 => tab display name, 1 => required cap, 2 => function that produces tab content, 3 => total number objects OR array(total, objects per page), 4 => add_query_args
 			$tabs["imageshack"]=array(__("ImageShack","imageshack"),"edit_posts",array($this,"HtmlPrintTab"),0);
 		}
 		
@@ -168,19 +155,19 @@ class ImageShack {
 	}
 	
 	function HtmlGetTab() {
-		return wp_iframe( array(&$this,'HtmlPrintTab'),'image', $errors );
+		return wp_iframe( array(&$this,'HtmlPrintTab'),'image', array() );
 	}
 	
 	function HtmlPrintTab($type = 'image', $errors = null, $id = null) {
 		if($this->mode=="wp25") {
-			media_admin_css();
+			//media_admin_css();
 			media_upload_header();
 		
 			$post_id = intval($_REQUEST['post_id']);
 
 			$form_action_url = get_option('siteurl') . "/wp-admin/media-upload.php?type=$type&tab=imageshack&post_id=$post_id";
 		} else {
-			$form_action_url = get_option('siteurl') . "/wp-admin/upload.php?style=inline&amp;tab=imageshack";	
+			$form_action_url = get_option('siteurl') . "/wp-admin/upload.php?style=inline&amp;tab=imageshack";
 		}
 	
 		?>
@@ -236,11 +223,11 @@ class ImageShack {
 							$file = ImageShackFile::FromXML($result);
 							if($file!==null) {
 								if($file->thumbExists) {
-									echo '<img src="' . $file->thumbLink . '" alt="Uploaded Image (Thumb)" style="float:left; margin:10px;" />';	
+									echo '<img src="' . $file->thumbLink . '" alt="Uploaded Image (Thumb)" style="float:left; margin:10px;" />';
 								} else {
-									echo '<img src="' . $file->imageLink . '" alt="Uploaded Image (No thumb available)" style="float:left; margin:10px; margin-right:20px; width:100px; height:100px;" />';	
+									echo '<img src="' . $file->imageLink . '" alt="Uploaded Image (No thumb available)" style="float:left; margin:10px; margin-right:20px; width:100px; height:100px;" />';
 									echo __("ImageShack didn't create a thumbnail for your images, most likely because it's too small.","imageshack");
-								}	
+								}
 								
 								echo "<ul style=\"list-style-position: inside;\">";
 								if($file->thumbExists) {
@@ -250,14 +237,14 @@ class ImageShack {
 								echo '<li><a href="javascript:imageshack_insert(\'' . $file->imageLink . '\'); void(0);">' . __("Insert image directly","imageshack"). '</a></li>';
 								echo "</ul>";
 							} else {
-								echo "<p>" . __("Sorry, ImageShack returned something strange.","imageshack") . "</p>";	
-							}	
+								echo "<p>" . __("Sorry, ImageShack returned something strange.","imageshack") . "</p>";
+							}
 						} else {
-							echo "<p>" . __("Sorry, upload to ImageShack failed.","imageshack") . "</p>";	
-						}	
-					}			
+							echo "<p>" . __("Sorry, upload to ImageShack failed.","imageshack") . "</p>";
+						}
+					}
 				} else {
-					echo "<p>" . __("Hey, you need to choose a file to upload ;)","imageshack") . "</p>";		
+					echo "<p>" . __("Hey, you need to choose a file to upload ;)","imageshack") . "</p>";
 				}
 				echo '<p><a href="' .  $form_action_url . '">' . __("Upload another file","imageshack") . '</a>';
 			} else {
@@ -290,11 +277,11 @@ class ImageShack {
 			<?php
 			}
 		} else {
-			_e("Uuuhm, sorry. You need to install <a target=\"_blank\" href=\"http://www.google.com/search?q=curl\">curl</a> first or ask your admin to do that for you.","imageshack");	
+			_e("Uuuhm, sorry. You need to install <a target=\"_blank\" href=\"http://www.google.com/search?q=curl\">curl</a> first or ask your admin to do that for you.","imageshack");
 		}
 		?>
 		</div>
-		<?php	
+		<?php
 	}
 	
 }
@@ -380,7 +367,7 @@ if(isset($_GET["res"]) && !empty($_GET["res"])) {
 			header('Content-Type: image/png');
 			echo $content;
 			exit;
-		}	
+		}
 	}
 }
 
