@@ -3,7 +3,7 @@ Contributors: arnee
 Donate link: http://www.arnebrachhold.de/redir/sitemap-paypal
 Tags: imageshack, post, images
 Requires at least: 2.1
-Stable tag: 1.1
+Stable tag: 1.2
 
 This plugin allows you to upload images from your WordPress post screen to ImageShack and to insert them with the thumbnail into your post with a few clicks.
 
